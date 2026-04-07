@@ -151,6 +151,31 @@
             animation: blink 1s step-end infinite;
         }
         
+        #startBtn {
+            display: block;
+            margin-top: 20px;
+            padding: 20px 60px;
+            font-family: 'VT323', monospace;
+            font-size: 32px;
+            background: linear-gradient(180deg, #FF00FF, #AA00AA);
+            border: 3px solid #00FFFF;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 10px;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px #FF00FF, inset 0 0 20px rgba(255,255,255,0.2);
+            z-index: 100;
+        }
+        
+        #startBtn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 10px #FF00FF;
+        }
+        
+        #overlay .prompt {
+            display: none;
+        }
+        
         #overlay .controls {
             margin-top: 30px;
             font-size: 20px;
@@ -271,6 +296,7 @@
         <div id="overlay">
             <h1>90'S DREAM</h1>
             <div class="tagline">By Emran Hossain</div>
+            <button id="startBtn">START GAME</button>
             <div class="prompt">[ PRESS SPACE TO START ]</div>
             <div class="controls">ARROWS / WASD to move • SPACE to jump</div>
         </div>
@@ -584,6 +610,13 @@
         addTouchListener(btnRight, 'right');
         addTouchListener(btnJump, 'jump');
 
+        const startBtn = document.getElementById('startBtn');
+        startBtn.addEventListener('click', startGame);
+        startBtn.addEventListener('touchstart', e => {
+            e.preventDefault();
+            startGame();
+        });
+
         function startGame() {
             initGame();
             gameState = 'playing';
@@ -598,6 +631,9 @@
                 highScoreEl.textContent = highScore;
             }
             drawGameOverScreen();
+            
+            startBtn.textContent = 'PLAY AGAIN';
+            overlay.classList.remove('hidden');
         }
 
         function drawGameOverScreen() {
@@ -694,7 +730,7 @@
             
             ctx.font = '24px VT323';
             ctx.fillStyle = '#00FFFF';
-            ctx.fillText('PRESS SPACE TO RETRY', centerX, H - 80);
+            ctx.fillText('PRESS SPACE OR TAP TO RETRY', centerX, H - 80);
             
             if (!overlay.classList.contains('hidden')) return;
         }
