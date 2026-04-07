@@ -182,6 +182,157 @@
             color: #888;
         }
         
+        #charSelect {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13, 0, 21, 0.98);
+            z-index: 90;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        #charSelect.show {
+            display: flex;
+        }
+        
+        #charSelect h2 {
+            color: #FF00FF;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px #FF00FF;
+        }
+        
+        .char-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+            max-width: 500px;
+        }
+        
+        .char-slot {
+            width: 120px;
+            height: 140px;
+            border: 3px solid rgba(255, 0, 255, 0.5);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background: rgba(255, 0, 255, 0.1);
+            overflow: hidden;
+            position: relative;
+            padding: 5px;
+        }
+        
+        .char-slot.selected {
+            border-color: #00FFFF;
+            box-shadow: 0 0 25px #00FFFF;
+        }
+        
+        .char-slot img {
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        
+        .char-slot .char-name {
+            color: #00FFFF;
+            font-size: 14px;
+            margin-top: 5px;
+            text-align: center;
+            word-break: break-word;
+        }
+        
+        .char-slot .plus {
+            font-size: 40px;
+            color: rgba(255, 0, 255, 0.7);
+        }
+        
+        .char-slot .add-char {
+            font-size: 14px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .char-slot .upload-input {
+            display: none;
+        }
+        
+        #nameInput {
+            display: none;
+            margin: 15px 0;
+            padding: 12px 20px;
+            font-family: 'VT323', monospace;
+            font-size: 24px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #00FFFF;
+            color: #fff;
+            border-radius: 8px;
+            text-align: center;
+            width: 200px;
+        }
+        
+        #nameInput.show {
+            display: block;
+        }
+        
+        #myCharsArea {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,0,255,0.3);
+        }
+        
+        #myCharsArea h3 {
+            color: #FFFF00;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        #allCharsArea h3 {
+            color: #39FF14;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        #leaderboard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 0, 255, 0.1);
+            border: 2px solid #FF00FF;
+            padding: 15px;
+            border-radius: 10px;
+            color: #00FFFF;
+            font-size: 18px;
+            z-index: 50;
+            min-width: 150px;
+        }
+        
+        #leaderboard h3 {
+            color: #FFFF00;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        #leaderboard ol {
+            padding-left: 25px;
+        }
+        
+        #leaderboard li {
+            margin: 5px 0;
+        }
+        
         #faceUpload {
             display: none;
         }
@@ -307,6 +458,23 @@
         </div>
         <input type="file" id="faceUpload" accept="image/*">
         <button id="uploadBtn">📷 Upload Face</button>
+        <div id="charSelect">
+            <h2>CHOOSE YOUR CHARACTER</h2>
+            <div id="myCharsArea">
+                <h3>📁 MY CHARACTERS</h3>
+                <div class="char-grid" id="myCharGrid"></div>
+            </div>
+            <div id="allCharsArea">
+                <h3>👥 ALL PLAYERS</h3>
+                <div class="char-grid" id="allCharGrid"></div>
+            </div>
+            <input type="text" id="nameInput" placeholder="Enter your name" maxlength="10">
+            <button id="confirmChar">PLAY GAME</button>
+        </div>
+        <div id="leaderboard">
+            <h3>🏆 TOP SCORES</h3>
+            <ol id="scoreList"></ol>
+        </div>
     </div>
 
     <script>
@@ -322,6 +490,24 @@
 
         let playerFace = null;
         let uploadedFace = null;
+        let characterImages = [null, null, null];
+        let selectedCharIndex = 0;
+
+        let leaderboard = JSON.parse(localStorage.getItem('90sDreamLeaderboard')) || [];
+
+        function updateLeaderboardUI() {
+            const list = document.getElementById('scoreList');
+            const top5 = leaderboard.slice(0, 5);
+            list.innerHTML = top5.map((s, i) => `<li>${s.name}: ${s.score}</li>`).join('') || '<li>No scores yet</li>';
+        }
+
+        function saveScore(name, score) {
+            leaderboard.push({ name, score });
+            leaderboard.sort((a, b) => b.score - a.score);
+            leaderboard = leaderboard.slice(0, 10);
+            localStorage.setItem('90sDreamLeaderboard', JSON.stringify(leaderboard));
+            updateLeaderboardUI();
+        }
         
         const faceUpload = document.getElementById('faceUpload');
         const uploadBtn = document.getElementById('uploadBtn');
@@ -611,10 +797,152 @@
         addTouchListener(btnJump, 'jump');
 
         const startBtn = document.getElementById('startBtn');
-        startBtn.addEventListener('click', startGame);
+        startBtn.addEventListener('click', () => {
+            document.getElementById('charSelect').classList.add('show');
+            initCharSelectScreen();
+        });
         startBtn.addEventListener('touchstart', e => {
             e.preventDefault();
-            startGame();
+            document.getElementById('charSelect').classList.add('show');
+            initCharSelectScreen();
+        });
+
+        const charSelect = document.getElementById('charSelect');
+        const confirmCharBtn = document.getElementById('confirmChar');
+        const nameInput = document.getElementById('nameInput');
+        const myCharGrid = document.getElementById('myCharGrid');
+        const allCharGrid = document.getElementById('allCharGrid');
+
+        let allSavedChars = JSON.parse(localStorage.getItem('90sDreamAllChars')) || [];
+        let selectedPlayerChar = null;
+        let selectedPlayerName = '';
+
+        function initCharSelectScreen() {
+            selectedPlayerChar = null;
+            selectedPlayerName = '';
+            nameInput.value = '';
+            nameInput.classList.remove('show');
+            
+            myCharGrid.innerHTML = '';
+            const myChars = allSavedChars.filter(c => c.isMy);
+            
+            if (myChars.length > 0) {
+                myChars.forEach((charData, idx) => {
+                    const slot = createCharSlot(charData.img, charData.name, true);
+                    myCharGrid.appendChild(slot);
+                });
+            } else {
+                const addSlot = document.createElement('div');
+                addSlot.className = 'char-slot';
+                addSlot.innerHTML = '<span class="plus">+</span><span class="add-char">ADD MY CHAR</span>';
+                addSlot.addEventListener('click', () => {
+                    addMyCharacter();
+                });
+                myCharGrid.appendChild(addSlot);
+            }
+            
+            allCharGrid.innerHTML = '';
+            allSavedChars.forEach((charData, idx) => {
+                if (!charData.isMy) {
+                    const slot = createCharSlot(charData.img, charData.name, false);
+                    allCharGrid.appendChild(slot);
+                }
+            });
+            
+            if (allSavedChars.length === 0) {
+                allCharGrid.innerHTML = '<div style="color:#888;font-size:16px;">No players yet. Add your character first!</div>';
+            }
+        }
+
+        function createCharSlot(imgSrc, name, isMyChar) {
+            const slot = document.createElement('div');
+            slot.className = 'char-slot';
+            
+            const img = document.createElement('img');
+            img.src = imgSrc;
+            slot.appendChild(img);
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'char-name';
+            nameSpan.textContent = name;
+            slot.appendChild(nameSpan);
+            
+            slot.addEventListener('click', () => {
+                document.querySelectorAll('.char-slot').forEach(s => s.classList.remove('selected'));
+                slot.classList.add('selected');
+                selectedPlayerChar = imgSrc;
+                selectedPlayerName = name;
+                confirmCharBtn.textContent = isMyChar ? 'PLAY GAME' : `PLAY AS ${name}`;
+                confirmCharBtn.style.display = 'block';
+            });
+            
+            return slot;
+        }
+
+        function addMyCharacter() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.click();
+            fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        nameInput.classList.add('show');
+                        nameInput.value = '';
+                        nameInput.focus();
+                        nameInput.dataset.image = event.target.result;
+                        confirmCharBtn.style.display = 'block';
+                        confirmCharBtn.textContent = 'SAVE & PLAY';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+        }
+
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && nameInput.value.trim()) {
+                saveAndPlay();
+            }
+        });
+
+        function saveAndPlay() {
+            const name = nameInput.value.trim() || 'Player';
+            const image = nameInput.dataset.image;
+            
+            allSavedChars.push({
+                name: name,
+                img: image,
+                isMy: true
+            });
+            
+            localStorage.setItem('90sDreamAllChars', JSON.stringify(allSavedChars));
+            delete nameInput.dataset.image;
+            nameInput.classList.remove('show');
+            
+            uploadedFace = new Image();
+            uploadedFace.onload = () => {};
+            uploadedFace.src = image;
+            
+            initCharSelectScreen();
+        }
+
+        confirmCharBtn.addEventListener('click', () => {
+            if (nameInput.classList.contains('show') && nameInput.dataset.image) {
+                saveAndPlay();
+            } else if (selectedPlayerChar) {
+                uploadedFace = new Image();
+                uploadedFace.onload = () => {};
+                uploadedFace.src = selectedPlayerChar;
+                
+                charSelect.classList.remove('show');
+                initGame();
+                gameState = 'playing';
+                overlay.classList.add('hidden');
+            } else {
+                addMyCharacter();
+            }
         });
 
         function startGame() {
@@ -625,6 +953,9 @@
 
         function gameOver() {
             gameState = 'gameover';
+            if (score > 0) {
+                saveScore('Player', score);
+            }
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('90sDreamHigh', highScore);
