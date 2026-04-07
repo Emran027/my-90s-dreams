@@ -193,29 +193,47 @@
         
         #touchControls {
             position: absolute;
-            bottom: 80px;
+            bottom: 100px;
             left: 0;
             right: 0;
             display: flex;
             justify-content: space-between;
             padding: 0 30px;
-            pointer-events: none;
             z-index: 60;
+            pointer-events: auto;
         }
         
         .touch-zone {
-            width: 100px;
-            height: 100px;
-            border: 3px solid rgba(255, 0, 255, 0.4);
-            border-radius: 15px;
+            width: 90px;
+            height: 90px;
+            border: 3px solid rgba(255, 0, 255, 0.6);
+            border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: rgba(255, 0, 255, 0.5);
-            font-size: 40px;
-            background: rgba(255, 0, 255, 0.1);
+            color: rgba(255, 0, 255, 0.8);
+            font-size: 36px;
+            background: rgba(255, 0, 255, 0.15);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
         
+        .touch-zone:active {
+            background: rgba(255, 0, 255, 0.4);
+            transform: scale(0.95);
+        }
+        
+        .touch-zone.jump {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
+            width: 100px;
+            height: 100px;
+            font-size: 40px;
+        }
+
         @media (min-width: 768px) {
             #touchControls { display: none; }
         }
@@ -257,9 +275,9 @@
             <div class="controls">ARROWS / WASD to move • SPACE to jump</div>
         </div>
         <div id="touchControls">
-            <div class="touch-zone">◀</div>
-            <div class="touch-zone">▲</div>
-            <div class="touch-zone">▶</div>
+            <div class="touch-zone" id="btnLeft">◀</div>
+            <div class="touch-zone jump" id="btnJump">▲</div>
+            <div class="touch-zone" id="btnRight">▶</div>
         </div>
         <input type="file" id="faceUpload" accept="image/*">
         <button id="uploadBtn">📷 Upload Face</button>
@@ -511,6 +529,60 @@
         });
 
         canvas.addEventListener('mouseup', handlePointerEnd);
+
+        const btnLeft = document.getElementById('btnLeft');
+        const btnRight = document.getElementById('btnRight');
+        const btnJump = document.getElementById('btnJump');
+        
+        function addTouchListener(btn, key) {
+            btn.addEventListener('touchstart', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (gameState === 'title' || gameState === 'gameover') {
+                    startGame();
+                    return;
+                }
+                if (key === 'left') touchLeft = true;
+                if (key === 'right') touchRight = true;
+                if (key === 'jump') touchJump = true;
+            });
+            
+            btn.addEventListener('touchend', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (key === 'left') touchLeft = false;
+                if (key === 'right') touchRight = false;
+                if (key === 'jump') touchJump = false;
+            });
+            
+            btn.addEventListener('mousedown', e => {
+                e.preventDefault();
+                if (gameState === 'title' || gameState === 'gameover') {
+                    startGame();
+                    return;
+                }
+                if (key === 'left') touchLeft = true;
+                if (key === 'right') touchRight = true;
+                if (key === 'jump') touchJump = true;
+            });
+            
+            btn.addEventListener('mouseup', e => {
+                e.preventDefault();
+                if (key === 'left') touchLeft = false;
+                if (key === 'right') touchRight = false;
+                if (key === 'jump') touchJump = false;
+            });
+            
+            btn.addEventListener('mouseleave', e => {
+                if (key === 'left') touchLeft = false;
+                if (key === 'right') touchRight = false;
+                if (key === 'jump') touchJump = false;
+            });
+        }
+        
+        addTouchListener(btnLeft, 'left');
+        addTouchListener(btnRight, 'right');
+        addTouchListener(btnJump, 'jump');
 
         function startGame() {
             initGame();
