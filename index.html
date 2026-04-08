@@ -307,16 +307,16 @@
         
         #leaderboard {
             position: absolute;
-            top: 80px;
+            top: 90px;
             right: 20px;
             background: rgba(255, 0, 255, 0.1);
             border: 2px solid #FF00FF;
             padding: 15px;
             border-radius: 10px;
             color: #00FFFF;
-            font-size: 18px;
+            font-size: 16px;
             z-index: 50;
-            min-width: 150px;
+            min-width: 140px;
         }
         
         #leaderboard h3 {
@@ -829,6 +829,8 @@
             nameInput.value = '';
             nameInput.classList.remove('show');
             
+            preloadDefaultChars();
+            
             myCharGrid.innerHTML = '';
             const myChars = allSavedChars.filter(c => c.isMy);
             
@@ -853,6 +855,15 @@
             showChars.forEach((charData, idx) => {
                 const slot = createCharSlot(charData.img, charData.name, charData.isMy);
                 allCharGrid.appendChild(slot);
+            });
+        }
+
+        function preloadDefaultChars() {
+            defaultChars.forEach(char => {
+                if (!uploadedFace) {
+                    uploadedFace = new Image();
+                    uploadedFace.src = char.img;
+                }
             });
         }
 
@@ -938,13 +949,13 @@
                 saveAndPlay();
             } else if (selectedPlayerChar) {
                 uploadedFace = new Image();
-                uploadedFace.onload = () => {};
+                uploadedFace.onload = () => {
+                    charSelect.classList.remove('show');
+                    initGame();
+                    gameState = 'playing';
+                    overlay.classList.add('hidden');
+                };
                 uploadedFace.src = selectedPlayerChar;
-                
-                charSelect.classList.remove('show');
-                initGame();
-                gameState = 'playing';
-                overlay.classList.add('hidden');
             } else {
                 addMyCharacter();
             }
@@ -958,8 +969,9 @@
 
         function gameOver() {
             gameState = 'gameover';
+            const playerName = selectedPlayerName || 'Player';
             if (score > 0) {
-                saveScore('Player', score);
+                saveScore(playerName, score);
             }
             if (score > highScore) {
                 highScore = score;
@@ -995,7 +1007,9 @@
             let playerRank = leaderboard.findIndex(s => s.name === selectedPlayerName && s.score === score) + 1;
             if (playerRank === 0) playerRank = leaderboard.length + 1;
             
-            if (uploadedFace) {
+            const canDrawImage = uploadedFace && uploadedFace.complete && uploadedFace.naturalWidth > 0;
+            
+            if (canDrawImage) {
                 ctx.save();
                 ctx.beginPath();
                 const r = 40;
@@ -1013,16 +1027,16 @@
                 ctx.closePath();
                 ctx.clip();
                 
-                const imgAspect = uploadedFace.width / uploadedFace.height;
+                const imgAspect = uploadedFace.naturalWidth / uploadedFace.naturalHeight;
                 const boxAspect = faceSize / faceSize;
-                let sx = 0, sy = 0, sw = uploadedFace.width, sh = uploadedFace.height;
+                let sx = 0, sy = 0, sw = uploadedFace.naturalWidth, sh = uploadedFace.naturalHeight;
                 
                 if (imgAspect > boxAspect) {
-                    sw = uploadedFace.height * boxAspect;
-                    sx = (uploadedFace.width - sw) / 2;
+                    sw = uploadedFace.naturalHeight * boxAspect;
+                    sx = (uploadedFace.naturalWidth - sw) / 2;
                 } else {
-                    sh = uploadedFace.width / boxAspect;
-                    sy = (uploadedFace.height - sh) / 2;
+                    sh = uploadedFace.naturalWidth / boxAspect;
+                    sy = (uploadedFace.naturalHeight - sh) / 2;
                 }
                 
                 ctx.drawImage(uploadedFace, sx, sy, sw, sh, fx, fy, faceSize, faceSize);
