@@ -307,7 +307,7 @@
         
         #leaderboard {
             position: absolute;
-            top: 20px;
+            top: 80px;
             right: 20px;
             background: rgba(255, 0, 255, 0.1);
             border: 2px solid #FF00FF;
@@ -818,9 +818,9 @@
         let selectedPlayerName = '';
 
         const defaultChars = [
-            { name: 'Ninja', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ninja&backgroundColor=b6e3f4' },
-            { name: 'Robot', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Robot&backgroundColor=c0aede' },
-            { name: 'Alien', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alien&backgroundColor=ffdfbf' }
+            { name: 'Shishu', img: 'shishuBhai.png', isMy: false },
+            { name: 'Erfan', img: 'erfanBhai.png', isMy: false },
+            { name: 'Akib', img: 'akibBhai.png', isMy: false }
         ];
 
         function initCharSelectScreen() {
@@ -862,6 +862,9 @@
             
             const img = document.createElement('img');
             img.src = imgSrc;
+            img.onerror = () => {
+                img.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + name;
+            };
             slot.appendChild(img);
             
             const nameSpan = document.createElement('span');
