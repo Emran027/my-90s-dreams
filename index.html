@@ -817,6 +817,12 @@
         let selectedPlayerChar = null;
         let selectedPlayerName = '';
 
+        const defaultChars = [
+            { name: 'Ninja', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ninja&backgroundColor=b6e3f4' },
+            { name: 'Robot', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Robot&backgroundColor=c0aede' },
+            { name: 'Alien', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alien&backgroundColor=ffdfbf' }
+        ];
+
         function initCharSelectScreen() {
             selectedPlayerChar = null;
             selectedPlayerName = '';
@@ -842,16 +848,12 @@
             }
             
             allCharGrid.innerHTML = '';
-            allSavedChars.forEach((charData, idx) => {
-                if (!charData.isMy) {
-                    const slot = createCharSlot(charData.img, charData.name, false);
-                    allCharGrid.appendChild(slot);
-                }
-            });
             
-            if (allSavedChars.length === 0) {
-                allCharGrid.innerHTML = '<div style="color:#888;font-size:16px;">No players yet. Add your character first!</div>';
-            }
+            const showChars = allSavedChars.length > 0 ? allSavedChars : defaultChars;
+            showChars.forEach((charData, idx) => {
+                const slot = createCharSlot(charData.img, charData.name, charData.isMy);
+                allCharGrid.appendChild(slot);
+            });
         }
 
         function createCharSlot(imgSrc, name, isMyChar) {
@@ -984,15 +986,18 @@
             }
             
             const centerX = W / 2;
-            const centerY = H / 2;
-            const faceSize = Math.min(W, H) * 0.5;
+            const centerY = H / 2 - 30;
+            const faceSize = Math.min(W, H) * 0.45;
+            
+            let playerRank = leaderboard.findIndex(s => s.name === selectedPlayerName && s.score === score) + 1;
+            if (playerRank === 0) playerRank = leaderboard.length + 1;
             
             if (uploadedFace) {
                 ctx.save();
                 ctx.beginPath();
                 const r = 40;
                 const fx = centerX - faceSize / 2;
-                const fy = centerY - faceSize / 2 - 50;
+                const fy = centerY - faceSize / 2;
                 ctx.moveTo(fx + r, fy);
                 ctx.lineTo(fx + faceSize - r, fy);
                 ctx.quadraticCurveTo(fx + faceSize, fy, fx + faceSize, fy + r);
@@ -1037,31 +1042,40 @@
             } else {
                 ctx.fillStyle = '#00FFFF';
                 ctx.beginPath();
-                ctx.arc(centerX, centerY - 50, faceSize / 2, 0, Math.PI * 2);
+                ctx.arc(centerX, centerY, faceSize / 2, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.strokeStyle = '#FF00FF';
                 ctx.lineWidth = 6;
                 ctx.stroke();
             }
             
-            ctx.font = 'bold 64px VT323';
+            ctx.font = 'bold 48px VT323';
             ctx.textAlign = 'center';
             ctx.fillStyle = '#FF0044';
             ctx.shadowColor = '#FF0044';
             ctx.shadowBlur = 20;
-            ctx.fillText('GAME OVER', centerX, centerY + faceSize / 2 + 80);
+            ctx.fillText('💀 REST IN PEACE 💀', centerX, centerY + faceSize / 2 + 70);
             ctx.shadowBlur = 0;
+            
+            ctx.font = 'bold 36px VT323';
+            ctx.fillStyle = '#FF00FF';
+            ctx.fillText(`${selectedPlayerName || 'Player'}`, centerX, centerY + faceSize / 2 + 120);
             
             ctx.font = '32px VT323';
             ctx.fillStyle = '#FFFF00';
             ctx.shadowColor = '#FFFF00';
             ctx.shadowBlur = 10;
-            ctx.fillText(`SCORE: ${score}`, centerX, centerY + faceSize / 2 + 140);
+            ctx.fillText(`SCORE: ${score}`, centerX, centerY + faceSize / 2 + 170);
             ctx.shadowBlur = 0;
             
-            ctx.font = '24px VT323';
+            ctx.font = '28px VT323';
+            ctx.fillStyle = '#39FF14';
+            const rankText = playerRank === 1 ? '🥇 #1 CHAMPION!' : `🏆 RANK: #${playerRank}`;
+            ctx.fillText(rankText, centerX, centerY + faceSize / 2 + 220);
+            
+            ctx.font = '22px VT323';
             ctx.fillStyle = '#00FFFF';
-            ctx.fillText('PRESS SPACE OR TAP TO RETRY', centerX, H - 80);
+            ctx.fillText('PRESS SPACE OR TAP TO RETRY', centerX, H - 60);
             
             if (!overlay.classList.contains('hidden')) return;
         }
